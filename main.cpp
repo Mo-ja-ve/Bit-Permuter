@@ -13,10 +13,9 @@ unsigned short p10(unsigned short p){
 		n = (p << (16 - perm_scheme[i-1]));
 		n = (n >> 15);
 		n =  n << 10 - i;
-		//cout<<endl<<"n: "<<n;
 		permuted = permuted | n; 
 	}
-	
+
 	return permuted;
 }
 
@@ -24,7 +23,9 @@ int main() {
 
 	unsigned short p = 682;
 	//p10(p);
-	cout<< endl<< "PERMUTED 10 BITS: "<< (unsigned short)p10(p);
+	cout<< endl<< "PERMUTED 10 BITS: "<< p10(p);
 
 	return 0;
 }
+
+
