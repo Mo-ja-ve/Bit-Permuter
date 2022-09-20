@@ -2,13 +2,24 @@
 
 using namespace std;
 
-
+//  p 10 permutation
 unsigned short p10(unsigned short p){
-	
+	//  Locations which we're taking bits from and moving them to
+	//  The instructions suggest that the left most bit is bit 1
+	//  However our implementation treats the left most bit as last
+	//  So if the instructions call to move the 2nd bit the the fihrst,
+	//  place we would use the 8th bit
+	//  The necessary order of bits which the instructiosn tell us to
+	//  permute are saved in perm_scheme in their respective orders
 	int perm_scheme[10] = { 8, 6, 9, 4, 7, 1, 10, 2 , 3 , 5};
 	unsigned short n = 0;// bit we're taking from old location to new location
 	unsigned short permuted = 0;
 
+	//  This for loop then ioslates the desired bit then sorts it into it's correct place
+	//  If we want bit 2 we shift 16 - 8 spaces to the left - isolating our 8th bit in,
+	//  the left most location then push it all the way right againt by traveling 15 spaces
+	//  we then place this new single isolated bit into it's index i location
+	//  we then bit or n with permuted to give us our correct bit in it's correct final location
 	for(int i = 1; i <= 10; i++){
 		n = (p << (16 - perm_scheme[i-1]));
 		n = (n >> 15);
@@ -19,6 +30,10 @@ unsigned short p10(unsigned short p){
 	return permuted;
 }
 
+//  This function shares an almost identical permutation scheme - Only mix 8 spots not 10
+//  Hence this time the for loop only goes to 8
+//  Hoever this function also differs when it comes to the Left and Right splitting
+//  The L and R splitting process is documented below as such: 
 unsigned short p8(unsigned short p){
 	
 	unsigned short mask = 0;
@@ -59,6 +74,8 @@ unsigned short p8(unsigned short p){
 	return permuted;
 }
 
+
+//  Initial permutation scheme as outlined in the insturctions
 unsigned short IP(char a){
 
 	unsigned short p = (unsigned short)a;
@@ -76,24 +93,26 @@ unsigned short IP(char a){
 	return permuted;
 }
 
+//  Inverse permutation
 unsigned short IP_inverse(char a){
 
-	// unsigned short p = (unsigned short)a;
-	// unsigned short permuted = 0;
-	// unsigned short n = 0;
+	unsigned short p = (unsigned short)a;
+	unsigned short permuted = 0;
+	unsigned short n = 0;
 
-	// int perm_scheme[8] = { 6, 2, 5, 7, 4, 0, 3, 1};
-	// for(int i = 1; i <= 8; i++){
-	// 	n = (p << (15 - perm_scheme[i-1]));
-	// 	n = (n >> 15);
-	// 	n = (n << 8 - i);
-	// 	permuted = permuted | n;
-	// }
-	// return permuted;
-	return 0;
+	int perm_scheme[8] = { 4, 7, 5, 1, 6, 0, 2};
+	for(int i = 1; i <= 8; i++){
+		n = (p << (15 - perm_scheme[i-1]));
+		n = (n >> 15);
+		n = (n << 8 - i);
+		permuted = permuted | n;
+	}
+
+	return permuted;
 }
 
-char fk(char a, unsigned short sk){
+// fk 
+char f(char a, unsigned short sk){
 
 	unsigned short nibble = (unsigned short)a;
 	unsigned short EP = 0;
@@ -119,8 +138,54 @@ char fk(char a, unsigned short sk){
 	return EP;
 }
 
+unsigned short sbox(unsigned short p){
+	
+	unsigned short s0[4][4] = {{1, 0, 3, 2}, 
+	 						   {3, 2, 1, 0},
+							   {0, 2, 1, 3},
+							   {3, 1, 3, 2}};
+	
+	unsigned short s1[4][4] = {{0, 1, 2, 3},
+							   {2, 0, 1, 3},
+							   {3, 0, 1, 0},
+							   {2, 1, 0, 3}};
+	
+	unsigned short top = p / 4;
+	unsigned short bottom = p % 4;
 
+	unsigned short top_row = (top & 8) / 4 + (top & 1);
+	unsigned short top_column = (top & 4) / 2 + (top & 2) / 2;
 
+	unsigned short bottom_row = (bottom & 8) / 4 + (top & 1);
+	unsigned short bottom_column = (top & 4) / 2 + (top & 2) / 2;
+
+	unsigned short top_permute = s0[top_row][top_column];
+	unsigned short bottom_permute = s1[bottom_row][bottom_column];
+
+	return top_permute * 4 + bottom_permute;
+}
+
+unsigned short p4(unsigned short p){
+	
+	int perm_scheme[4] = { 2, 0, 1, 3};
+	unsigned short permuted = 0;
+	unsigned  short n = 0;
+	
+	for(int i = 1; i <= 4; i++){
+		n = (p << (15 - perm_scheme[i-1]));
+		n = (n >> 15);
+		n = (n << 8 - i);
+		permuted = permuted | n;
+	}
+	return permuted;
+}
+
+unsigned short switch_nibs(unsigned short byte)
+{
+	unsigned short nib1 = byte / 16;
+	unsigned short nib2 = byte % 16;
+	return nib2 * 16 + nib1;
+}
 
 int main() {
 
@@ -132,10 +197,13 @@ int main() {
 	p = p8(p);
 	cout<<endl<<"P: "<<p;
 	sk = p;
-	fk(a,sk);
+	p = f(a,sk);
+
+	p = sbox(p);
+	p = p4(p);
+
+
 	//cout<<endl<<"CIRCLE LEFT SHIFT : "<< fk(a, sk);
 
 	return 0;
 }
-
-
