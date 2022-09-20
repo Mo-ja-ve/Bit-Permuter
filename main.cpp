@@ -225,14 +225,14 @@ unsigned short p4(unsigned short p){
 // fiestil function 
 char f(char a, unsigned short sk){
 
-	char nibble = a;
-	unsigned short EP = 0;
+	unsigned short nibble = (unsigned short)a;
+	unsigned short permuted = 0;
 	unsigned short n = 0;
 	unsigned short p = 0;
 	
-	cout<<endl<<"a: "<<a;
+	//cout<<endl<<"a: "<<bitset<8>(a);
 
-	nibble = (nibble << 8);	
+	nibble = (nibble << 12);
 	//cout<<endl<<"NIB: "<<bitset<8>(nibble);
 	nibble = (nibble >> 12);
 	//cout<<endl<<"NIB: "<<bitset<8>(nibble);
@@ -241,35 +241,43 @@ char f(char a, unsigned short sk){
 	for(int i = 1; i <= 8; i++){
 		n = (nibble << (15 - perm_scheme[i-1]));
 		n = (n >> 15);
-		n = (n << 8 - i);
-		EP = EP | n;
-
-		// cout<<endl<<"Iterration: "<<i;
-		// cout<<endl<<"N: "<<bitset<8>(n);
-		// cout<<endl<<" EP: "<<bitset<8>(EP);
+		n = (n << (8 - i));
+		//cout<<endl<<"N: "<<bitset<8>(n)<<"I: "<<i;
+		//cout<<endl<<" EP: "<<bitset<8>(permuted);
+		permuted = permuted | n;
+		//cout<<endl<<"permuted: "<<bitset<8>(permuted);
+		//cout<<endl<<" ";
 	}
-	// cout<<endl<<"SK: "<<sk;
+	//cout<<endl<<"permuted: "<<bitset<8>(permuted);
+	//cout<<endl<<"SK: "<<sk;
 	// cout<<endl;
-	EP = EP ^ sk;
+	
+	permuted = permuted ^ sk;
+	permuted = (a >> 4) ^ permuted;
 
-	EP = sbox(EP);
-	EP = p4(EP);
+
+	permuted = sbox(permuted);
+	cout<<endl<<"permuted: "<<permuted;
+	permuted = p4(permuted);
 	
 
-	EP = (a >> 4) ^ EP;
-	EP = (EP / 16);
-	a = a % 16;
-	EP = EP + a;
+	permuted = (a >> 4) ^ permuted;
+	permuted = (permuted << 4);
+	a = (a << 12);
+	a = (a >> 12);
+	permuted = permuted | a;
 
-	return EP;
+	return permuted;
 }
 
 
 unsigned short switch_nibs(unsigned short byte)
 {
-	unsigned short nib1 = byte / 16;
-	unsigned short nib2 = byte % 16;
-	return nib2 * 16 + nib1; 
+	//cout<<endl<<"byte: "<<byte;
+	unsigned short nib1 = (byte << 12);
+	nib1 = (nib1 >> 8);
+	unsigned short nib2 = (byte >> 4);
+	return nib1 | nib2; 
 }
 
 int main() {
@@ -302,12 +310,14 @@ int main() {
 		plain_byte = message[i];
 		cipher_byte = IP(plain_byte);
 		cipher_byte = f(cipher_byte, key1);
+		//cout<<endl<<"byte :"<<cipher_byte;
 		cipher_byte = switch_nibs(cipher_byte);
-		// cipher_byte = f(cipher_byte, key2);
-		// cipher_byte = IP_inverse(cipher_byte);
-		// cout << (char)cipher_byte;
-		// cout << " ";
-		// cout << cipher_byte;
+		//cout<<endl<<"cipher byte: "<<cipher_byte;
+		//cipher_byte = f(cipher_byte, key2);
+		//cipher_byte = IP_inverse(cipher_byte);
+		//cout << (char)cipher_byte;
+		//cout << " ";
+		//cout << cipher_byte;
 	}
 	cout << endl;
 
