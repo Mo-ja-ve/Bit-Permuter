@@ -1,4 +1,6 @@
 #include <iostream>
+#include <string>
+#include <bitset>
 
 using namespace std;
 
@@ -74,15 +76,57 @@ unsigned short p8(unsigned short p){
 	return permuted;
 }
 
+unsigned short p8_shift2(unsigned short p){
+	
+	unsigned short mask = 0;
+	unsigned short L = 0;// Left half 5 bits
+	unsigned short R = 0;// Right half 5 bits
 
-//  Initial permutation scheme as outlined in the insturctions
-unsigned short IP(char a){
-
-	unsigned short p = (unsigned short)a;
+	unsigned short n = 0;// bit we're taking from old location to new location
 	unsigned short permuted = 0;
-	unsigned short n = 0;
 
-	int perm_scheme[8] = { 6, 2, 5, 7, 4, 0, 3, 1};
+	L = (p >> 5);
+	R = (p << 11);
+	R = (R >> 11);
+	
+	// left shit - 1 LEFT half 5 bits
+	mask = (L << 12);
+	mask = (mask >> 11);
+	L = (L >> 4);
+	L = L | mask;
+
+	mask = (L << 12);
+	mask = (mask >> 11); 
+	L = (L >> 4);
+	L = L | mask;
+
+	mask = (L << 12);
+	mask = (mask >> 11);
+	L = (L >> 4);
+	L = L | mask;
+
+
+	// left shit - 1 RIGHT half 5 bits
+	mask = (R << 12);
+	mask = (mask >> 11);
+	R = (R >> 4);
+	R = R | mask;
+
+	mask = (R << 12);
+	mask = (mask >> 11);
+	R = (R >> 4);
+	R = R | mask;
+
+	mask = (R << 12);
+	mask = (mask >> 11);
+	R = (R >> 4);
+	R = R | mask;
+
+	//Combining left 5 and right 5 back together
+	p = (L << 5) | R;
+
+	// now we P8
+	int perm_scheme[10] = { 4, 7, 3, 6, 2, 5, 0, 1};
 	for(int i = 1; i <= 8; i++){
 		n = (p << (15 - perm_scheme[i-1]));
 		n = (n >> 15);
@@ -90,6 +134,31 @@ unsigned short IP(char a){
 		permuted = permuted | n;
 	}
 
+	return permuted;
+}
+
+
+//  Initial permutation scheme as outlined in the insturctions
+unsigned short IP(unsigned short a){
+
+	unsigned short p = a;
+	unsigned short permuted = 0;
+	unsigned short n = 0;
+	//cout<<endl<<"A: "<<a;
+	int perm_scheme[8] = { 6, 2, 5, 7, 4, 0, 3, 1};
+	for(int i = 1; i <= 8; i++){
+		//cout<<endl<<"I: "<<i;
+		//cout<<endl<<"P: "<<p;
+		n = (p << (15 - perm_scheme[i-1]));
+		//cout<<endl<<"n: "<<n;
+		n = (n >> 15);
+		//cout<<endl<<"n: "<<n;
+		n = (n << 8 - i);
+		//cout<<endl<<"n: "<<n;
+		permuted = permuted | n;
+		//cout<<endl<<"Permuted: "<<permuted;
+	}
+	//cout<<endl<<"IP: "<<permuted;
 	return permuted;
 }
 
@@ -109,33 +178,6 @@ unsigned short IP_inverse(char a){
 	}
 
 	return permuted;
-}
-
-// fk 
-char f(char a, unsigned short sk){
-
-	unsigned short nibble = (unsigned short)a;
-	unsigned short EP = 0;
-	unsigned short n = 0;
-	unsigned short p = 0;
-
-	nibble = (nibble << 4);
-	nibble = (nibble >> 4);
-	
-	int perm_scheme[8] = { 0, 3, 2, 1, 2, 1, 0, 3};
-	for(int i = 1; i <= 8; i++){
-		n = (nibble << (15 - perm_scheme[i-1]));
-		n = (n >> 15);
-		n = (n << 8 - i);
-		EP = EP | n;
-	}
-
-	cout<<endl<<"SK: "<<sk;
-	cout<<endl;
-	EP = EP ^ sk;
-	cout<<endl<<"EP: "<<EP;
-
-	return EP;
 }
 
 unsigned short sbox(unsigned short p){
@@ -174,33 +216,100 @@ unsigned short p4(unsigned short p){
 	for(int i = 1; i <= 4; i++){
 		n = (p << (15 - perm_scheme[i-1]));
 		n = (n >> 15);
-		n = (n << 8 - i);
+		n = (n << 4 - i);
 		permuted = permuted | n;
 	}
 	return permuted;
 }
 
+// fiestil function 
+char f(char a, unsigned short sk){
+
+	char nibble = a;
+	unsigned short EP = 0;
+	unsigned short n = 0;
+	unsigned short p = 0;
+	
+	cout<<endl<<"a: "<<a;
+
+	nibble = (nibble << 8);	
+	//cout<<endl<<"NIB: "<<bitset<8>(nibble);
+	nibble = (nibble >> 12);
+	//cout<<endl<<"NIB: "<<bitset<8>(nibble);
+
+	int perm_scheme[8] = { 0, 3, 2, 1, 2, 1, 0, 3};
+	for(int i = 1; i <= 8; i++){
+		n = (nibble << (15 - perm_scheme[i-1]));
+		n = (n >> 15);
+		n = (n << 8 - i);
+		EP = EP | n;
+
+		// cout<<endl<<"Iterration: "<<i;
+		// cout<<endl<<"N: "<<bitset<8>(n);
+		// cout<<endl<<" EP: "<<bitset<8>(EP);
+	}
+	// cout<<endl<<"SK: "<<sk;
+	// cout<<endl;
+	EP = EP ^ sk;
+
+	EP = sbox(EP);
+	EP = p4(EP);
+	
+
+	EP = (a >> 4) ^ EP;
+	EP = (EP / 16);
+	a = a % 16;
+	EP = EP + a;
+
+	return EP;
+}
+
+
 unsigned short switch_nibs(unsigned short byte)
 {
 	unsigned short nib1 = byte / 16;
 	unsigned short nib2 = byte % 16;
-	return nib2 * 16 + nib1;
+	return nib2 * 16 + nib1; 
 }
 
 int main() {
-
-	unsigned short p = 682;
+	string message;
+	unsigned short key1 = 0;
+	unsigned short key2 = 0;
+	
 	char a = 'a';
 	unsigned short sk = 0;
 
-	p = p10(p);
-	p = p8(p);
-	cout<<endl<<"P: "<<p;
-	sk = p;
-	p = f(a,sk);
+	//cout<<endl<<"P: "<<p;
+	// sk = p;
+	// p = f(a,sk);
 
-	p = sbox(p);
-	p = p4(p);
+	// p = sbox(p);
+	// p = p4(p);
+
+	cout<<endl<<"Enter Plain Text Message: ";
+	getline(cin, message);
+	cout<<endl<<"Enter 10-bit key as an unsigned short: ";
+	cin >> key1;
+
+	key1 = p10(key1);
+	key2 = p10(key1);
+	key1 = p8(key1);
+	key2 = p8_shift2(key2);
+
+	unsigned short plain_byte, cipher_byte;
+	for(int i =0; i < message.length(); i++){
+		plain_byte = message[i];
+		cipher_byte = IP(plain_byte);
+		cipher_byte = f(cipher_byte, key1);
+		cipher_byte = switch_nibs(cipher_byte);
+		// cipher_byte = f(cipher_byte, key2);
+		// cipher_byte = IP_inverse(cipher_byte);
+		// cout << (char)cipher_byte;
+		// cout << " ";
+		// cout << cipher_byte;
+	}
+	cout << endl;
 
 
 	//cout<<endl<<"CIRCLE LEFT SHIFT : "<< fk(a, sk);
