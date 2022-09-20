@@ -59,13 +59,81 @@ unsigned short p8(unsigned short p){
 	return permuted;
 }
 
+unsigned short IP(char a){
+
+	unsigned short p = (unsigned short)a;
+	unsigned short permuted = 0;
+	unsigned short n = 0;
+
+	int perm_scheme[8] = { 6, 2, 5, 7, 4, 0, 3, 1};
+	for(int i = 1; i <= 8; i++){
+		n = (p << (15 - perm_scheme[i-1]));
+		n = (n >> 15);
+		n = (n << 8 - i);
+		permuted = permuted | n;
+	}
+
+	return permuted;
+}
+
+unsigned short IP_inverse(char a){
+
+	// unsigned short p = (unsigned short)a;
+	// unsigned short permuted = 0;
+	// unsigned short n = 0;
+
+	// int perm_scheme[8] = { 6, 2, 5, 7, 4, 0, 3, 1};
+	// for(int i = 1; i <= 8; i++){
+	// 	n = (p << (15 - perm_scheme[i-1]));
+	// 	n = (n >> 15);
+	// 	n = (n << 8 - i);
+	// 	permuted = permuted | n;
+	// }
+	// return permuted;
+	return 0;
+}
+
+char fk(char a, unsigned short sk){
+
+	unsigned short nibble = (unsigned short)a;
+	unsigned short EP = 0;
+	unsigned short n = 0;
+	unsigned short p = 0;
+
+	nibble = (nibble << 4);
+	nibble = (nibble >> 4);
+	
+	int perm_scheme[8] = { 0, 3, 2, 1, 2, 1, 0, 3};
+	for(int i = 1; i <= 8; i++){
+		n = (nibble << (15 - perm_scheme[i-1]));
+		n = (n >> 15);
+		n = (n << 8 - i);
+		EP = EP | n;
+	}
+
+	cout<<endl<<"SK: "<<sk;
+	cout<<endl;
+	EP = EP ^ sk;
+	cout<<endl<<"EP: "<<EP;
+
+	return EP;
+}
+
+
+
+
 int main() {
 
 	unsigned short p = 682;
-	p = p10(p);
-	//cout<< endl<< "PERMUTED 10 BITS: "<< p10(p);
+	char a = 'a';
+	unsigned short sk = 0;
 
-	cout<<endl<<"CIRCLE LEFT SHIFT 1: "<< p8(p);
+	p = p10(p);
+	p = p8(p);
+	cout<<endl<<"P: "<<p;
+	sk = p;
+	fk(a,sk);
+	//cout<<endl<<"CIRCLE LEFT SHIFT : "<< fk(a, sk);
 
 	return 0;
 }
