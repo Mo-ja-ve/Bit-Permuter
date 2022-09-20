@@ -48,16 +48,15 @@ unsigned short p8(unsigned short p){
 	p = (L << 5) | R;
 
 	// now we P8
-	int perm_scheme[10] = { 6, 3, 7, 4, 8, 5, 10, 9};
+	int perm_scheme[10] = { 4, 7, 3, 6, 2, 5, 0, 1};
 	for(int i = 1; i <= 8; i++){
-		n = (p << (17 - perm_scheme[i-1]));
+		n = (p << (15 - perm_scheme[i-1]));
 		n = (n >> 15);
 		n = (n << 8 - i);
 		permuted = permuted | n;
 	}
 
 	return permuted;
-
 }
 
 int main() {
