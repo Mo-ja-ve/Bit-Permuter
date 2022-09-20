@@ -25,17 +25,39 @@ unsigned short p8(unsigned short p){
 	unsigned short L = 0;// Left half 5 bits
 	unsigned short R = 0;// Right half 5 bits
 
+	unsigned short n = 0;// bit we're taking from old location to new location
+	unsigned short permuted = 0;
+
 	L = (p >> 5);
 	R = (p << 11);
 	R = (R >> 11);
 	
+	// left shit - 1 LEFT half 5 bits
 	mask = (L << 12);
 	mask = (mask >> 11);
 	L = (L >> 4);
 	L = L | mask;
 
+	// left shit - 1 RIGHT half 5 bits
+	mask = (R << 12);
+	mask = (mask >> 11);
+	R = (R >> 4);
+	R = R | mask;
 
-	
+	//Combining left 5 and right 5 back together
+	p = (L << 5) | R;
+
+	// now we P8
+	int perm_scheme[10] = { 6, 3, 7, 4, 8, 5, 10, 9};
+	for(int i = 1; i <= 8; i++){
+		n = (p << (17 - perm_scheme[i-1]));
+		n = (n >> 15);
+		n = (n << 8 - i);
+		permuted = permuted | n;
+	}
+
+	return permuted;
+
 }
 
 int main() {
